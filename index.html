@@ -6,6 +6,7 @@
     <title>Catálogo de Productos - VENTA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -41,10 +42,10 @@
             box-shadow: 0 10px 20px -5px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
         .dark .product-card:hover { box-shadow: 0 10px 20px -5px rgb(0 0 0 / 0.25); }
-        
+       
         .admin-only { display: none !important; }
         body.role-admin .admin-only { display: flex !important; }
-        
+       
         #loader, #gemini-loader {
             border: 4px solid #475569;
             border-top: 4px solid #3b82f6;
@@ -79,7 +80,8 @@
         <div class="w-full max-w-sm p-8 space-y-6 bg-white rounded-lg shadow-xl dark:bg-slate-800">
             <h2 class="text-2xl font-bold text-center text-gray-800 dark:text-slate-200">Iniciar Sesión</h2>
             <form id="login-form" class="space-y-6">
-                <input type="email" id="email" placeholder="Correo" required class="w-full px-3 py-2 mt-1 border rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white" value="admin@pos.com">
+                <!-- Removed hardcoded value from email input -->
+                <input type="email" id="email" placeholder="Correo" required class="w-full px-3 py-2 mt-1 border rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
                 <input type="password" id="password" placeholder="Contraseña" required class="w-full px-3 py-2 mt-1 border rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white" value="password">
                 <div id="login-error" class="text-sm text-red-500 h-4"></div>
                 <button type="submit" class="w-full px-4 py-2 font-semibold text-white bg-blue-600 rounded-md hover:bg-blue-700">Ingresar</button>
@@ -178,8 +180,8 @@
             </nav>
         </footer>
     </div>
-    
-    <!-- Modales -->
+   
+    <!-- Modals -->
     <div id="notification-toast" class="fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-md opacity-0 translate-y-2 pointer-events-none"></div>
     <div id="confirm-modal" class="modal fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4 opacity-0"><div class="modal-container bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-sm p-6 scale-95"><h3 id="confirm-title" class="text-lg font-bold text-slate-800 dark:text-slate-200">Confirmar Acción</h3><p id="confirm-message" class="text-sm text-slate-500 dark:text-slate-400 mt-2 mb-6">¿Estás seguro? Esta acción no se puede deshacer.</p><div class="flex justify-end gap-3"><button id="confirm-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-slate-600 dark:text-slate-200">Cancelar</button><button id="confirm-action-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Confirmar</button></div></div></div>
     <div id="ticket-modal" class="modal fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4 opacity-0">
@@ -221,7 +223,7 @@
             <form id="income-form" class="space-y-4">
                 <input type="text" id="income-description" placeholder="Descripción del Ingreso" required class="w-full p-3 border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
                 <input type="number" id="income-amount" placeholder="Monto" step="0.01" required class="w-full p-3 border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-                <select id="income-category" required class="w-full p-3 border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                 <select id="income-category" required class="w-full p-3 border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
                     <option value="" disabled selected>Selecciona una categoría</option>
                     <option value="Ventas Extras">Ventas Extras</option>
                     <option value="Inversiones">Inversiones</option>
@@ -239,7 +241,13 @@
                 <input type="hidden" id="transaction-type">
                 <input type="text" id="transaction-description" placeholder="Descripción" required class="w-full p-3 border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
                 <input type="number" id="transaction-amount" placeholder="Monto" step="0.01" required class="w-full p-3 border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
-                <div class="flex justify-end gap-3 pt-2"><button type="button" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-slate-600 dark:text-slate-200">Cancelar</button><button type="submit" class="submit-btn px-4 py-2 text-white rounded-md">Guardar</button></div>
+                <select id="transaction-category" class="w-full p-3 border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                    <option value="Impuestos">Impuestos</option>
+                    <option value="Seguro">Seguro</option>
+                    <option value="Préstamos">Préstamos</option>
+                    <option value="Otros">Otros</option>
+                </select>
+                <div class="flex justify-end gap-3 pt-2"><button type="button" id="cancel-transaction-btn" class="cancel-btn px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-slate-600 dark:text-slate-200">Cancelar</button><button type="submit" class="submit-btn px-4 py-2 text-white rounded-md">Guardar</button></div>
             </form>
         </div>
     </div>
@@ -248,9 +256,16 @@
             <h3 id="employee-modal-title" class="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4">Agregar Empleado</h3>
             <form id="employee-form" class="space-y-4">
                 <input type="hidden" id="employee-id">
+                <input type="text" id="employee-first-name" placeholder="Nombre" required class="w-full p-3 border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                <input type="text" id="employee-last-name" placeholder="Apellido" required class="w-full p-3 border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
                 <input type="email" id="employee-email" placeholder="Correo del Empleado" required class="w-full p-3 border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
                 <input type="password" id="employee-password" placeholder="Contraseña (dejar en blanco para no cambiar)" class="w-full p-3 border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
                 <input type="number" id="employee-base-salary" placeholder="Salario Base Mensual" step="0.01" required class="w-full p-3 border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                <!-- Added Role selection -->
+                <select id="employee-role" required class="w-full p-3 border-gray-300 rounded-md dark:bg-slate-700 dark:border-slate-600 dark:text-white">
+                    <option value="employee">Empleado</option>
+                    <option value="admin">Administrador</option>
+                </select>
                 <div class="flex justify-end gap-3 pt-2"><button type="button" id="cancel-employee-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 dark:bg-slate-600 dark:text-slate-200">Cancelar</button><button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Guardar Empleado</button></div>
             </form>
         </div>
@@ -294,7 +309,7 @@
                 appId: "1:602077008054:web:ca857c7566a9ce0945d617",
                 measurementId: "G-W5L6995VDE"
             };
-            
+           
             // Initialize Firebase
             const app = initializeApp(firebaseConfig);
             const auth = getAuth(app);
@@ -305,11 +320,7 @@
             let allGeneralIncome = [], allGeneralExpenses = [];
             let currentCategory = 'All', cartItems = [], selectedPromoProduct = null, currentEditingKey = null, currentUserRole = null;
             let confirmActionCallback = null;
-            let salesChart = null;
-            let payrollChart = null;
-            let incomeExpenseChart = null;
-            let categorySalesChart = null;
-
+            let salesChart = null, payrollChart = null, incomeExpenseChart = null, categorySalesChart = null;
 
             // DOM Elements
             const authView = document.getElementById('auth-view');
@@ -340,31 +351,45 @@
                 document.querySelectorAll('.view-section').forEach(view => view.classList.remove('active'));
                 const newView = document.getElementById(viewId);
                 if (newView) newView.classList.add('active');
+               
                 const viewName = viewId.replace('-view', '');
-                
-                if (viewId === 'perfil-view') {
-                    renderProfileView(auth.currentUser);
-                } else if (viewId === 'desempeno-vendedor-view' && param) {
-                    renderSellerPerformanceView(param.uid);
+               
+                const titles = {
+                    'productos': 'Productos',
+                    'detail': 'Detalle del Producto',
+                    'venta': 'Venta',
+                    'inventario': 'Inventario',
+                    'perfil': 'Perfil',
+                    'producto-form': productFormTitle.textContent || 'Formulario de Producto',
+                    'desempeno-vendedor': 'Desempeño del Vendedor',
+                    'payroll': 'Nómina',
+                    'financial-reports': 'Reportes Financieros'
+                };
+                headerTitle.textContent = titles[viewName] || 'App';
+
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.toggle('active', item.dataset.view === viewName);
+                });
+
+                // Specific render functions for views that need them
+                switch (viewId) {
+                    case 'perfil-view':
+                        renderProfileView(auth.currentUser);
+                        break;
+                    case 'desempeno-vendedor-view':
+                        if (param && param.uid) renderSellerPerformanceView(param.uid);
+                        break;
+                    case 'payroll-view':
+                        renderPayrollReport();
+                        break;
+                    case 'financial-reports-view':
+                        renderFinancialReports();
+                        break;
                 }
 
-                if (!['detail', 'producto-form', 'desempeno-vendedor', 'payroll', 'financial-reports'].includes(viewName)) {
-                    headerTitle.textContent = viewName.charAt(0).toUpperCase() + viewName.slice(1);
-                    document.querySelectorAll('.nav-item').forEach(item => {
-                        item.classList.toggle('active', item.dataset.view === viewName);
-                    });
-                } else if (viewId === 'producto-form-view') {
-                    headerTitle.textContent = productFormTitle.textContent;
-                } else if (viewId === 'desempeno-vendedor-view') {
-                     headerTitle.textContent = "Desempeño";
-                } else if (viewId === 'payroll-view') {
-                     headerTitle.textContent = "Nómina";
-                } else if (viewId === 'financial-reports-view') {
-                     headerTitle.textContent = "Reportes Financieros";
-                }
                 renderFiltersForView(viewName);
                 mainContentWrapper.scrollTop = 0;
-            }
+            };
 
             const showProductDetail = (productData) => {
                 const container = document.getElementById('product-detail-content');
@@ -377,11 +402,11 @@
                     }
                 }
                 detailHTML += `
-                        <button id="show-related-btn" class="mt-4 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">✨ Ver Productos Relacionados</button>
-                        </div><div class="flex justify-between items-center mt-6 pt-6 border-t border-slate-200 dark:border-slate-700"><p class="text-4xl font-extrabold text-blue-600 dark:text-blue-500">${formattedPrice}</p><span class="text-sm font-medium text-slate-600 dark:text-slate-400">Stock: ${productData.stock || 0}</span></div></div>`;
+                                <button id="show-related-btn" class="mt-4 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700">✨ Ver Productos Relacionados</button>
+                                </div><div class="flex justify-between items-center mt-6 pt-6 border-t border-slate-200 dark:border-slate-700"><p class="text-4xl font-extrabold text-blue-600 dark:text-blue-500">${formattedPrice}</p><span class="text-sm font-medium text-slate-600 dark:text-slate-400">Stock: ${productData.stock || 0}</span></div></div>`;
                 container.innerHTML = detailHTML;
                 showView('detail-view');
-            }
+            };
 
             const setupProductForm = (mode, productData = {}, productKey = null) => {
                 productForm.reset();
@@ -419,7 +444,7 @@
                 }
                 showView('producto-form-view');
             };
-            
+           
             const fetchAllData = () => {
                 loader.style.display = 'block';
                 const refs = {
@@ -461,12 +486,12 @@
                 loader.style.display = 'none';
             }
 
-            const createProductCard = (key, data) => { const card = document.createElement('div'); card.className = 'product-card rounded-lg overflow-hidden shadow-lg dark:border dark:border-slate-700'; card.dataset.key = key; const formattedPrice = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(data.precio_venta); const stock = data.stock || 0; let stockLabel; if (data.isPromo) { stockLabel = `<span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-purple-900 dark:text-purple-300">OFERTA</span>`; } else if (stock === 0) { stockLabel = `<span class="text-xs font-bold text-red-500">Agotado</span>`; } else { const stockColor = stock < 6 ? 'text-yellow-500' : 'text-green-600'; stockLabel = `<span class="text-xs font-bold ${stockColor}">${stock} en Stock</span>`; } card.innerHTML = `<div class="relative aspect-[3/4]"><img src="${data.imagen_url}" alt="${data.producto}" class="absolute h-full w-full object-cover" onerror="this.src='https://placehold.co/600x800/e2e8f0/4a5568?text=N/A'"><div class="absolute top-2 right-2 space-x-2 admin-only"><button data-key="${key}" class="edit-btn p-2 bg-blue-600/80 text-white rounded-full hover:bg-blue-600 backdrop-blur-sm"><svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button><button data-key="${key}" class="delete-btn p-2 bg-red-600/80 text-white rounded-full hover:bg-red-600 backdrop-blur-sm"><svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></div><button data-key="${key}" class="add-to-cart-gallery-btn absolute bottom-2 right-2 p-2 bg-green-500/80 text-white rounded-full hover:bg-green-500 backdrop-blur-sm"><svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg></button></div><div class="p-4"><div class="flex justify-between items-center mb-2"><p class="text-xs text-slate-500 dark:text-slate-400">${data.categoria || 'Sin Categoría'}</p>${stockLabel}</div><h3 class="font-semibold text-slate-800 dark:text-slate-200 truncate">${data.producto}</h3><p class="text-lg font-bold text-blue-600 dark:text-blue-500 mt-1">${formattedPrice}</p></div>`; return card; }
+            const createProductCard = (key, data) => { const card = document.createElement('div'); card.className = 'product-card rounded-lg overflow-hidden shadow-lg dark:border dark:border-slate-700'; card.dataset.key = key; const formattedPrice = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(data.precio_venta); const stock = data.stock || 0; let stockLabel; if (data.isPromo) { stockLabel = `<span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-purple-900 dark:text-purple-300">OFERTA</span>`; } else if (stock === 0) { stockLabel = `<span class="text-xs font-bold text-red-500">Agotado</span>`; } else { const stockColor = stock < 10 ? 'text-yellow-500' : 'text-green-600'; stockLabel = `<span class="text-xs font-bold ${stockColor}">${stock} en Stock</span>`; } card.innerHTML = `<div class="relative aspect-[3/4]"><img src="${data.imagen_url}" alt="${data.producto}" class="absolute h-full w-full object-cover" onerror="this.src='https://placehold.co/600x800/e2e8f0/4a5568?text=N/A'"><div class="absolute top-2 right-2 space-x-2 admin-only"><button data-key="${key}" class="edit-btn p-2 bg-blue-600/80 text-white rounded-full hover:bg-blue-600 backdrop-blur-sm"><svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" /></svg></button><button data-key="${key}" class="delete-btn p-2 bg-red-600/80 text-white rounded-full hover:bg-red-600 backdrop-blur-sm"><svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" /></svg></button></div><button data-key="${key}" class="add-to-cart-gallery-btn absolute bottom-2 right-2 p-2 bg-green-500/80 text-white rounded-full hover:bg-green-500 backdrop-blur-sm"><svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" /></svg></button></div><div class="p-4"><div class="flex justify-between items-center mb-2"><p class="text-xs text-slate-500 dark:text-slate-400">${data.categoria || 'Sin Categoría'}</p>${stockLabel}</div><h3 class="font-semibold text-slate-800 dark:text-slate-200 truncate">${data.producto}</h3><p class="text-lg font-bold text-blue-600 dark:text-blue-500 mt-1">${formattedPrice}</p></div>`; return card; }
             const renderFiltersForView = (viewName) => { if (!filtersContainer) return; filtersContainer.innerHTML = ''; searchToggleButton.classList.toggle('hidden', viewName !== 'productos'); filtersContainer.classList.remove('open'); if (viewName === 'productos') { let filtersHTML = `<div class="flex flex-col md:flex-row gap-4 items-center"><div class="flex-grow w-full"><input type="search" id="search-box-gallery" placeholder="Buscar por nombre, código, categoría o etiqueta..." class="w-full px-5 py-3 rounded-full border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 shadow-sm"></div><div class="relative w-full md:w-auto md:min-w-[200px]"><select id="category-dropdown" class="w-full px-4 py-3 text-sm rounded-full border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 shadow-sm"></select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div></div></div>`; filtersContainer.innerHTML = filtersHTML; document.getElementById('search-box-gallery').addEventListener('input', applyGalleryFilters); renderCategoryDropdown(); document.getElementById('category-dropdown').addEventListener('change', (e) => { currentCategory = e.target.value; applyGalleryFilters(); }); } }
             const displayProducts = (productsToDisplay) => { galleryContainer.innerHTML = ''; noResultsDiv.classList.toggle('hidden', productsToDisplay.length > 0); productsToDisplay.forEach(p => { galleryContainer.appendChild(createProductCard(p.key, p)); }); }
-            const renderInventoryList = (products) => { inventoryTableBody.innerHTML = ''; if (products.length === 0) { inventoryTableBody.innerHTML = '<tr><td colspan="2" class="text-center p-8 text-slate-500">No se encontraron productos.</td></tr>'; return; } products.sort((a,b) => (a.stock || 0) - (b.stock || 0)).forEach(p => { const stock = p.stock || 0; let stockColor = stock < 6 ? 'text-yellow-500' : 'text-green-600'; if (stock === 0) stockColor = 'text-red-500'; const row = document.createElement('tr'); row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center"><div class="flex-shrink-0 h-10 w-10"><img class="h-10 w-10 rounded-full object-cover" src="${p.imagen_url}" alt=""></div><div class="ml-4"><div class="text-sm font-medium text-slate-900 dark:text-white">${p.producto}</div><div class="text-sm text-slate-500 dark:text-slate-400">${p.codigo}</div></div></div></td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium ${stockColor}">${stock} unidades</td>`; inventoryTableBody.appendChild(row); }); }
+            const renderInventoryList = (products) => { inventoryTableBody.innerHTML = ''; if (products.length === 0) { inventoryTableBody.innerHTML = '<tr><td colspan="2" class="text-center p-8 text-slate-500">No se encontraron productos.</td></tr>'; return; } products.sort((a,b) => (a.stock || 0) - (b.stock || 0)).forEach(p => { const stock = p.stock || 0; let stockColor = stock < 10 ? 'text-yellow-500' : 'text-green-600'; if (stock === 0) stockColor = 'text-red-500'; const row = document.createElement('tr'); row.innerHTML = `<td class="px-6 py-4 whitespace-nowrap"><div class="flex items-center"><div class="flex-shrink-0 h-10 w-10"><img class="h-10 w-10 rounded-full object-cover" src="${p.imagen_url}" alt=""></div><div class="ml-4"><div class="text-sm font-medium text-slate-900 dark:text-white">${p.producto}</div><div class="text-sm text-slate-500 dark:text-slate-400">${p.codigo}</div></div></div></td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium ${stockColor}">${stock} unidades</td>`; inventoryTableBody.appendChild(row); }); }
             const applyGalleryFilters = () => { const gallerySearchBox = document.getElementById('search-box-gallery'); const searchTerm = gallerySearchBox ? gallerySearchBox.value.toLowerCase().trim() : ''; const categoryDropdown = document.getElementById('category-dropdown'); currentCategory = categoryDropdown ? categoryDropdown.value : 'All'; let filtered = allProducts; if (currentCategory !== 'All') { filtered = filtered.filter(p => (p.categoria || 'Sin Categoría') === currentCategory); } if (searchTerm) { filtered = filtered.filter(p => { const tags = (p.tags || '').toLowerCase(); return p.producto.toLowerCase().includes(searchTerm) || p.codigo.toLowerCase().includes(searchTerm) || (p.categoria || '').toLowerCase().includes(searchTerm) || tags.includes(searchTerm); }); } displayProducts(filtered); }
-            const renderCategoryDropdown = () => { const categoryDropdown = document.getElementById('category-dropdown'); if (!categoryDropdown) return; const categories = ['All', ...new Set(allProducts.map(p => p.categoria || 'Sin Categoría').sort())]; categoryDropdown.innerHTML = categories.map(cat => `<option value="${cat}">${cat === 'All' ? 'Todas las Categorías' : cat}</option>`).join(''); categoryDropdown.value = currentCategory; }
+            const renderCategoryDropdown = () => { const categoryDropdown = document.getElementById('category-dropdown'); if (!categoryDropdown) return; const categories = ['All', ...new Set(allProducts.map(p => p.categoria || 'Sin Categoría').filter(Boolean).sort())]; categoryDropdown.innerHTML = categories.map(cat => `<option value="${cat}">${cat === 'All' ? 'Todas las Categorías' : cat}</option>`).join(''); categoryDropdown.value = currentCategory; }
             const updateCart = () => { const cartSubtotalEl = document.getElementById('cart-subtotal'); const cartTaxEl = document.getElementById('cart-tax'); const cartTotalEl = document.getElementById('cart-total'); if (cartItems.length === 0) { cartItemsContainer.innerHTML = '<p class="text-slate-500 text-center py-4">El carrito está vacío</p>'; } else { cartItemsContainer.innerHTML = cartItems.map((item, index) => `<div class="flex items-center gap-3 p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-700/50"><img src="${item.imagen_url}" class="w-10 h-10 object-cover rounded-md flex-shrink-0" /><div class="flex-grow min-w-0"><p class="font-semibold text-sm truncate">${item.producto}</p><p class="text-xs text-slate-500">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(item.precio_venta)}</p></div><input type="number" value="${item.quantity}" min="1" max="${item.stock}" class="w-16 text-center bg-slate-100 dark:bg-slate-700 rounded-md p-1 quantity-input" data-index="${index}"><button class="text-red-500 hover:text-red-700 remove-item-btn p-1 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50" data-index="${index}"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></div>`).join(''); } const subtotal = cartItems.reduce((acc, item) => acc + (item.precio_venta * item.quantity), 0); const tax = subtotal * 0.16; const total = subtotal + tax; cartSubtotalEl.textContent = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(subtotal); cartTaxEl.textContent = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(tax); cartTotalEl.textContent = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(total); updateChange(); }
             const addToCart = (product) => { if (product.stock <= 0) { showToast('Este producto está agotado.', true); return; } const existingItem = cartItems.find(item => item.key === product.key); if (existingItem) { if (existingItem.quantity < product.stock) existingItem.quantity++; else showToast('No hay más stock disponible.', true); } else { cartItems.push({ ...product, quantity: 1 }); } updateCart(); const ventaNavIcon = document.querySelector('.nav-item[data-view="venta"]'); ventaNavIcon.classList.add('cart-bounce'); setTimeout(() => ventaNavIcon.classList.remove('cart-bounce'), 300); }
             const updateChange = () => { const total = cartItems.reduce((acc, item) => acc + (item.precio_venta * item.quantity), 0) * 1.16; const paid = parseFloat(paymentInput.value) || 0; const change = paid - total; document.getElementById('change-display').textContent = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(change > 0 ? change : 0); }
@@ -476,7 +501,7 @@
             const sunIcon = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>`;
             const moonIcon = `<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>`;
             const setupTheme = () => { if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) { document.documentElement.classList.add('dark'); themeToggle.innerHTML = sunIcon; } else { document.documentElement.classList.remove('dark'); themeToggle.innerHTML = moonIcon; } };
-            
+           
             setPersistence(auth, browserLocalPersistence).catch((error) => {
                 console.error("Error al configurar persistencia:", error);
             });
@@ -506,7 +531,7 @@
                     signOut(auth);
                 }
             };
-            
+           
             onAuthStateChanged(auth, (user) => {
                 if (user) {
                     initializeUserSession(user);
@@ -519,11 +544,11 @@
 
             document.getElementById('login-form').addEventListener('submit', async (e) => { e.preventDefault(); const loginError = document.getElementById('login-error'); loginError.textContent = ''; try { await signInWithEmailAndPassword(auth, document.getElementById('email').value, document.getElementById('password').value); } catch (error) { loginError.textContent = 'Credenciales incorrectas.'; } });
             logoutButton.addEventListener('click', () => signOut(auth));
-            
+           
             addProductButton.addEventListener('click', () => setupProductForm('add'));
-            productForm.addEventListener('submit', (e) => { e.preventDefault(); const key = currentEditingKey; const isPromo = document.getElementById('promo-toggle').checked; const data = { producto: document.getElementById('producto').value, codigo: document.getElementById('codigo').value, categoria: document.getElementById('categoria').value,  precio_compra: parseFloat(document.getElementById('precio_compra').value), precio_venta: parseFloat(document.getElementById('precio_venta').value), stock: parseInt(document.getElementById('stock').value), imagen_url: document.getElementById('imagen_url').value, tags: document.getElementById('tags').value, descripcion: document.getElementById('descripcion').value, isPromo: isPromo, promoProductKey: isPromo && selectedPromoProduct ? selectedPromoProduct.key : null, }; if (isPromo && !selectedPromoProduct) { showToast('Debes seleccionar un producto para el paquete promocional.', true); return; } const action = key ? update(ref(db, `productos/${key}`), data) : set(push(ref(db, 'productos')), data); action.then(() => { showView('productos-view'); }).catch(err => showToast('Error al guardar producto.', true)); });
-            galleryContainer.addEventListener('click', (e) => { const card = e.target.closest('.product-card'); if (!card) return; const key = card.dataset.key; const productData = allProducts.find(p => p.key === key); if (!productData) return; const editBtn = e.target.closest('.edit-btn'); const deleteBtn = e.target.closest('.delete-btn'); const addToCartBtn = e.target.closest('.add-to-cart-gallery-btn'); if (editBtn) { setupProductForm('edit', productData, key); } else if (deleteBtn) { showConfirmation('Borrar Producto', '¿Estás seguro de que quieres borrar este producto? Esta acción no se puede deshacer.', () => { remove(ref(db, `productos/${key}`)); }); } else if (addToCartBtn) { addToCart(productData); } else { showProductDetail(productData); } });
-            
+            productForm.addEventListener('submit', (e) => { e.preventDefault(); const key = currentEditingKey; const isPromo = document.getElementById('promo-toggle').checked; const data = { producto: document.getElementById('producto').value, codigo: document.getElementById('codigo').value, categoria: document.getElementById('categoria').value,  precio_compra: parseFloat(document.getElementById('precio_compra').value), precio_venta: parseFloat(document.getElementById('precio_venta').value), stock: parseInt(document.getElementById('stock').value), imagen_url: document.getElementById('imagen_url').value, tags: document.getElementById('tags').value, descripcion: document.getElementById('descripcion').value, isPromo: isPromo, promoProductKey: isPromo && selectedPromoProduct ? selectedPromoProduct.key : null, }; if (isPromo && !selectedPromoProduct) { showToast('Debes seleccionar un producto para el paquete promocional.', true); return; } const action = key ? update(ref(db, `productos/${key}`), data) : set(push(ref(db, 'productos')), data); action.then(() => { logAction(key ? 'product_update' : 'product_create', { productKey: key || 'new', productName: data.producto }); showView('productos-view'); showToast('Producto guardado con éxito.'); }).catch(err => showToast(`Error al guardar producto: ${err.message}`, true)); });
+            galleryContainer.addEventListener('click', (e) => { const card = e.target.closest('.product-card'); if (!card) return; const key = card.dataset.key; const productData = allProducts.find(p => p.key === key); if (!productData) return; const editBtn = e.target.closest('.edit-btn'); const deleteBtn = e.target.closest('.delete-btn'); const addToCartBtn = e.target.closest('.add-to-cart-gallery-btn'); if (editBtn) { setupProductForm('edit', productData, key); } else if (deleteBtn) { showConfirmation('Borrar Producto', `¿Estás seguro de que quieres borrar "${productData.producto}"? Esta acción no se puede deshacer.`, () => { remove(ref(db, `productos/${key}`)).then(() => logAction('product_delete', { productKey: key, productName: productData.producto })); }); } else if (addToCartBtn) { addToCart(productData); } else { showProductDetail(productData); } });
+           
             const showConfirmation = (title, message, callback) => {
                 document.getElementById('confirm-title').textContent = title;
                 document.getElementById('confirm-message').textContent = message;
@@ -549,14 +574,16 @@
             cartItemsContainer.addEventListener('click', (e) => { const removeBtn = e.target.closest('.remove-item-btn'); if (removeBtn) { const index = removeBtn.dataset.index; cartItems.splice(index, 1); updateCart(); } });
             paymentInput.addEventListener('input', updateChange);
             document.getElementById('cancel-sale-btn').addEventListener('click', () => { cartItems = []; paymentInput.value = ''; updateCart(); });
-            document.getElementById('charge-btn').addEventListener('click', () => { if(cartItems.length === 0) { showToast('El carrito está vacío.', true); return; } for (const item of cartItems) { const productData = allProducts.find(p => p.key === item.key); if (!productData || productData.stock < item.quantity) { showToast(`No hay suficiente stock para ${item.producto}.`, true); return; } if(item.isPromo && item.promoProductKey) { const promoProd = allProducts.find(p => p.key === item.promoProductKey); if(!promoProd || promoProd.stock < item.quantity) { showToast(`No hay suficiente stock para el producto promocional ${promoProd.producto}.`, true); return; } } } generateTicketCanvas(); openModal('ticket-modal'); });
-            
+            document.getElementById('charge-btn').addEventListener('click', () => { if(cartItems.length === 0) { showToast('El carrito está vacío.', true); return; } for (const item of cartItems) { const productData = allProducts.find(p => p.key === item.key); if (!productData || productData.stock < item.quantity) { showToast(`No hay suficiente stock para ${item.producto}.`, true); return; } if(item.isPromo && item.promoProductKey) { const promoProd = allProducts.find(p => p.key === item.promoProductKey); if(!promoProd || promoProd.stock < item.quantity) { showToast(`No hay suficiente stock para el producto promocional ${promoProd.producto}.`, true); return; } } } generateTicketCanvas({items: cartItems, paid: parseFloat(paymentInput.value) || 0, sellerId: auth.currentUser.uid}); openModal('ticket-modal'); });
+           
             const finalizeSale = () => {
                 const updates = {};
-                const saleId = push(ref(db, 'sales')).key;
-                const saleItems = cartItems.map(item => ({ producto: item.producto, quantity: item.quantity, precio_compra: item.precio_compra, precio_venta: item.precio_venta }));
+                const saleRef = push(ref(db, 'sales'));
+                const saleId = saleRef.key;
+                const folio = `VTA-${Date.now()}`;
+                const saleItems = cartItems.map(item => ({ producto: item.producto, quantity: item.quantity, precio_compra: item.precio_compra, precio_venta: item.precio_venta, isPromo: item.isPromo || false }));
                 const totalSale = cartItems.reduce((acc, item) => acc + (item.precio_venta * item.quantity), 0) * 1.16;
-                updates[`/sales/${saleId}`] = { sellerId: auth.currentUser.uid, timestamp: Date.now(), total: totalSale, items: saleItems };
+                updates[`/sales/${saleId}`] = { sellerId: auth.currentUser.uid, timestamp: Date.now(), total: totalSale, items: saleItems, folio: folio };
                 cartItems.forEach(item => {
                     const productData = allProducts.find(p => p.key === item.key);
                     const newStock = productData.stock - item.quantity;
@@ -576,18 +603,19 @@
                     }
                 });
                 update(ref(db), updates).then(() => {
+                    logAction('sale_complete', { saleId, total: totalSale, folio });
                     showToast('¡Venta completada!');
                     cartItems = [];
                     paymentInput.value = '';
                     updateCart();
-                }).catch(error => showToast('Error al procesar la venta.', true));
+                }).catch(error => showToast(`Error al procesar la venta: ${error.message}`, true));
             }
 
             document.getElementById('close-ticket-btn').addEventListener('click', () => { closeModal('ticket-modal'); finalizeSale(); });
             document.getElementById('download-ticket-btn').addEventListener('click', () => { const canvas = document.getElementById('ticket-canvas'); const link = document.createElement('a'); link.download = `ticket-venta-${Date.now()}.png`; link.href = canvas.toDataURL('image/png'); link.click(); });
-            function generateTicketCanvas() { const canvas = document.getElementById('ticket-canvas'); const ctx = canvas.getContext('2d'); const lineHeight = 22; const startY = 25; let currentY = startY; const canvasWidth = 320; const padding = 15; const baseHeight = 220; const dynamicHeight = (cartItems.length * lineHeight) + baseHeight; canvas.height = dynamicHeight; canvas.width = canvasWidth; ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#000000'; ctx.font = 'bold 16px "Courier New", monospace'; ctx.textAlign = 'center'; ctx.fillText('TICKET DE VENTA', canvasWidth / 2, currentY); currentY += lineHeight * 1.5; ctx.font = '11px "Courier New", monospace'; ctx.fillText(new Date().toLocaleString('es-MX'), canvasWidth / 2, currentY); currentY += lineHeight * 1.5; ctx.fillText('-'.repeat(40), canvasWidth / 2, currentY); currentY += lineHeight; ctx.textAlign = 'left'; ctx.font = 'bold 11px "Courier New", monospace'; ctx.fillText('Cant. Producto', padding, currentY); ctx.textAlign = 'right'; ctx.fillText('Total', canvasWidth - padding, currentY); currentY += lineHeight * 0.5; ctx.textAlign = 'center'; ctx.fillText('-'.repeat(40), canvasWidth / 2, currentY); currentY += lineHeight; ctx.font = '11px "Courier New", monospace'; cartItems.forEach(item => { ctx.textAlign = 'left'; const name = item.producto.length > 28 ? item.producto.substring(0, 25) + '...' : item.producto; ctx.fillText(`${item.quantity} x ${name}`, padding, currentY); ctx.textAlign = 'right'; ctx.fillText(new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(item.precio_venta * item.quantity), canvasWidth - padding, currentY); currentY += lineHeight; }); ctx.textAlign = 'center'; ctx.fillText('-'.repeat(40), canvasWidth / 2, currentY); currentY += lineHeight; const subtotal = cartItems.reduce((acc, item) => acc + (item.precio_venta * item.quantity), 0); const tax = subtotal * 0.16; const total = subtotal + tax; const paid = parseFloat(paymentInput.value) || 0; const change = paid - total; ctx.textAlign = 'right'; ctx.font = '12px "Courier New", monospace'; ctx.fillText(`Subtotal: ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(subtotal)}`, canvasWidth - padding, currentY); currentY += lineHeight; ctx.fillText(`IVA (16%): ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(tax)}`, canvasWidth - padding, currentY); currentY += lineHeight; ctx.font = 'bold 14px "Courier New", monospace'; ctx.fillText(`TOTAL: ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(total)}`, canvasWidth - padding, currentY); currentY += lineHeight * 1.5; ctx.font = '12px "Courier New", monospace'; ctx.fillText(`Paga con: ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(paid)}`, canvasWidth - padding, currentY); currentY += lineHeight; ctx.fillText(`Cambio: ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(change > 0 ? change : 0)}`, canvasWidth - padding, currentY); currentY += lineHeight * 2; const folio = `VTA-${Date.now()}`; drawBarcode(ctx, folio, canvasWidth / 2 - 100, currentY, 200, 40); currentY += 55; ctx.textAlign = 'center'; ctx.font = 'bold 12px "Courier New", monospace'; ctx.fillText('¡Gracias por su compra!', canvasWidth / 2, currentY); }
+            function generateTicketCanvas(saleData) { const canvas = document.getElementById('ticket-canvas'); const ctx = canvas.getContext('2d'); const lineHeight = 22; const startY = 25; let currentY = startY; const canvasWidth = 320; const padding = 15; const baseHeight = 280; const dynamicHeight = (saleData.items.length * lineHeight) + baseHeight; canvas.height = dynamicHeight; canvas.width = canvasWidth; ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#000000'; ctx.font = 'bold 16px "Courier New", monospace'; ctx.textAlign = 'center'; ctx.fillText('TICKET DE VENTA', canvasWidth / 2, currentY); currentY += lineHeight * 1.5; ctx.font = '11px "Courier New", monospace'; ctx.fillText(new Date(saleData.timestamp || Date.now()).toLocaleString('es-MX'), canvasWidth / 2, currentY); currentY += lineHeight; const seller = allUsers[saleData.sellerId]; const sellerName = seller ? (seller.firstName || seller.email) : 'Desconocido'; ctx.fillText(`Atendido por: ${sellerName}`, canvasWidth / 2, currentY); currentY += lineHeight * 1.5; ctx.fillText('-'.repeat(40), canvasWidth / 2, currentY); currentY += lineHeight; ctx.textAlign = 'left'; ctx.font = 'bold 11px "Courier New", monospace'; ctx.fillText('Cant. Producto', padding, currentY); ctx.textAlign = 'right'; ctx.fillText('Total', canvasWidth - padding, currentY); currentY += lineHeight * 0.5; ctx.textAlign = 'center'; ctx.fillText('-'.repeat(40), canvasWidth / 2, currentY); currentY += lineHeight; ctx.font = '11px "Courier New", monospace'; saleData.items.forEach(item => { ctx.textAlign = 'left'; const name = item.producto.length > 28 ? item.producto.substring(0, 25) + '...' : item.producto; ctx.fillText(`${item.quantity} x ${name}`, padding, currentY); ctx.textAlign = 'right'; ctx.fillText(new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(item.precio_venta * item.quantity), canvasWidth - padding, currentY); currentY += lineHeight; }); ctx.textAlign = 'center'; ctx.fillText('-'.repeat(40), canvasWidth / 2, currentY); currentY += lineHeight; const subtotal = saleData.items.reduce((acc, item) => acc + (item.precio_venta * item.quantity), 0); const tax = subtotal * 0.16; const total = subtotal + tax; const paid = saleData.paid || total; const change = paid - total; ctx.textAlign = 'right'; ctx.font = '12px "Courier New", monospace'; ctx.fillText(`Subtotal: ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(subtotal)}`, canvasWidth - padding, currentY); currentY += lineHeight; ctx.fillText(`IVA (16%): ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(tax)}`, canvasWidth - padding, currentY); currentY += lineHeight; ctx.font = 'bold 14px "Courier New", monospace'; ctx.fillText(`TOTAL: ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(total)}`, canvasWidth - padding, currentY); currentY += lineHeight * 1.5; ctx.font = '12px "Courier New", monospace'; ctx.fillText(`Paga con: ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(paid)}`, canvasWidth - padding, currentY); currentY += lineHeight; ctx.fillText(`Cambio: ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(change > 0 ? change : 0)}`, canvasWidth - padding, currentY); currentY += lineHeight * 2; const folio = saleData.folio || `VTA-${Date.now()}`; drawBarcode(ctx, folio, canvasWidth / 2 - 100, currentY, 200, 40); currentY += 55; ctx.textAlign = 'center'; ctx.font = 'bold 12px "Courier New", monospace'; ctx.fillText('¡Gracias por su compra!', canvasWidth / 2, currentY); }
             function drawBarcode(ctx, text, x, y, width, height) { let currentX = x; for (let i = 0; i < text.length; i++) { if (Math.random() > 0.5) { const barWidth = Math.random() * (width / text.length - 2) + 2; ctx.fillRect(currentX, y, barWidth, height); } currentX += (width / text.length); } ctx.font = '12px "Courier New", monospace'; ctx.textAlign = 'center'; ctx.fillText(text, x + width / 2, y + height + 15); }
-            
+           
             document.getElementById('promo-toggle').addEventListener('change', (e) => {
                 const promoDetails = document.getElementById('promo-details');
                 promoDetails.classList.toggle('open', e.target.checked);
@@ -668,6 +696,7 @@
                             <button data-action="add-income" class="admin-action-btn p-4 bg-green-500 text-white rounded-lg shadow-md flex flex-col items-center justify-center aspect-square"><svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg><span class="text-sm font-semibold text-center">Añadir Ingreso</span></button>
                             <button data-action="manage-employees" class="admin-action-btn p-4 bg-indigo-500 text-white rounded-lg shadow-md flex flex-col items-center justify-center aspect-square"><svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg><span class="text-sm font-semibold text-center">Administrar Empleados</span></button>
                             <button data-action="payroll" class="admin-action-btn p-4 bg-gray-500 text-white rounded-lg shadow-md flex flex-col items-center justify-center aspect-square"><svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg><span class="text-sm font-semibold text-center">Nómina</span></button>
+                            <button data-action="financial-reports" class="admin-action-btn p-4 bg-teal-500 text-white rounded-lg shadow-md flex flex-col items-center justify-center aspect-square"><svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg><span class="text-sm font-semibold text-center">Reportes Financieros</span></button>
                         </div>
                     </div>
                     <div id="admin-content-view" class="hidden"></div>
@@ -679,7 +708,7 @@
                         const adminMainDashboard = document.getElementById('admin-main-dashboard');
                         const adminContentView = document.getElementById('admin-content-view');
 
-                        const showAdminContent = (title, content) => {
+                        const showAdminContent = (title, contentGenerator) => {
                             adminMainDashboard.classList.add('hidden');
                             adminContentView.classList.remove('hidden');
                             adminContentView.innerHTML = `
@@ -687,8 +716,9 @@
                                     <h2 class="text-2xl font-bold">${title}</h2>
                                     <button id="back-to-admin-dashboard" class="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-500 font-semibold"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>Volver</button>
                                 </div>
-                                ${content}
+                                <div id="admin-dynamic-content"></div>
                             `;
+                            contentGenerator(); // This function will populate the content and set up listeners
                             document.getElementById('back-to-admin-dashboard').addEventListener('click', () => {
                                 adminContentView.classList.add('hidden');
                                 adminMainDashboard.classList.remove('hidden');
@@ -697,10 +727,10 @@
 
                         switch (action) {
                             case 'view-tickets':
-                                showAdminContent('Todos los Tickets de Venta', renderTicketsList());
+                                showAdminContent('Todos los Tickets de Venta', renderTicketsList);
                                 break;
                             case 'low-stock':
-                                showAdminContent('Productos con Bajo Stock', renderLowStockList());
+                                showAdminContent('Productos con Bajo Stock', renderLowStockList);
                                 break;
                             case 'add-expense':
                                 openModal('expense-modal');
@@ -709,58 +739,248 @@
                                 openModal('income-modal');
                                 break;
                             case 'manage-employees':
-                                showAdminContent('Administrar Empleados', renderEmployeeList());
+                                showAdminContent('Administrar Empleados', renderEmployeeList);
                                 break;
                             case 'payroll':
-                                renderPayrollReport();
+                                showView('payroll-view');
+                                break;
+                            case 'financial-reports':
+                                showView('financial-reports-view');
                                 break;
                         }
                     });
                 });
             }
-            
+           
             // Admin Panel Functions
             const renderTicketsList = () => {
-                if (allSales.length === 0) return '<p class="text-slate-500">No hay ventas registradas.</p>';
-                const salesByDate = [...allSales].sort((a, b) => b.timestamp - a.timestamp);
-                return `<div class="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden"><ul class="divide-y divide-slate-200 dark:divide-slate-700">${salesByDate.map(sale => {
-                    const sellerEmail = allUsers[sale.sellerId]?.email || 'Desconocido';
-                    return `<li class="p-4"><div class="flex justify-between items-center"><div><p class="font-bold text-lg">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(sale.total)}</p><p class="text-sm text-slate-500">Vendido por: ${sellerEmail}</p></div><p class="text-sm text-slate-400">${new Date(sale.timestamp).toLocaleString('es-MX')}</p></div><div class="mt-2 text-sm">${sale.items.map(i => `<span>${i.quantity}x ${i.producto}</span>`).join(', ')}</div></li>`
-                }).join('')}</ul></div>`;
+                const container = document.getElementById('admin-dynamic-content');
+                const employees = Object.entries(allUsers).filter(([_, user]) => user.role === 'employee');
+                container.innerHTML = `
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md mb-6">
+                        <div class="flex flex-wrap gap-4 items-center">
+                            <div><label for="ticket-start-date" class="text-sm font-medium">Desde:</label><input type="date" id="ticket-start-date" class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"></div>
+                            <div><label for="ticket-end-date" class="text-sm font-medium">Hasta:</label><input type="date" id="ticket-end-date" class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"></div>
+                            <div><label for="ticket-seller" class="text-sm font-medium">Vendedor:</label><select id="ticket-seller" class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"><option value="all">Todos</option>${employees.map(([uid, user]) => `<option value="${uid}">${user.firstName || user.email}</option>`).join('')}</select></div>
+                            <div><label for="ticket-folio-search" class="text-sm font-medium">Folio:</label><input type="search" id="ticket-folio-search" placeholder="Buscar por folio..." class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"></div>
+                            <button id="export-tickets-csv" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Exportar CSV</button>
+                        </div>
+                    </div>
+                    <div id="tickets-kpis" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>
+                    <div id="tickets-list-container" class="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden"><ul class="divide-y divide-slate-200 dark:divide-slate-700"></ul></div>
+                `;
+
+                const updateFilteredTickets = () => {
+                    const startVal = document.getElementById('ticket-start-date').value;
+                    const endVal = document.getElementById('ticket-end-date').value;
+                    const startDate = startVal ? new Date(startVal + 'T00:00:00').getTime() : null;
+                    const endDate = endVal ? new Date(endVal + 'T23:59:59').getTime() : null;
+                    const sellerId = document.getElementById('ticket-seller').value;
+                    const folioTerm = document.getElementById('ticket-folio-search').value.toLowerCase();
+
+                    const filteredSales = allSales.filter(sale => {
+                        const saleDate = sale.timestamp;
+                        const isAfterStart = !startDate || saleDate >= startDate;
+                        const isBeforeEnd = !endDate || saleDate <= endDate;
+                        const isCorrectSeller = sellerId === 'all' || sale.sellerId === sellerId;
+                        const hasFolio = !folioTerm || (sale.folio && sale.folio.toLowerCase().includes(folioTerm));
+                        return isAfterStart && isBeforeEnd && isCorrectSeller && hasFolio;
+                    });
+
+                    const listContainer = container.querySelector('#tickets-list-container ul');
+                    if (filteredSales.length === 0) {
+                        listContainer.innerHTML = '<li class="p-4 text-center text-slate-500">No se encontraron tickets con los filtros seleccionados.</li>';
+                    } else {
+                        listContainer.innerHTML = filteredSales
+                            .sort((a, b) => b.timestamp - a.timestamp)
+                            .map(sale => {
+                                const seller = allUsers[sale.sellerId];
+                                const sellerName = seller ? (seller.firstName || seller.email) : 'Desconocido';
+                                return `<li class="p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                                    <div class="flex flex-wrap justify-between items-center gap-2">
+                                        <div>
+                                            <p class="font-bold">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(sale.total)}</p>
+                                            <p class="text-sm text-slate-500">Vendido por: ${sellerName}</p>
+                                            <p class="text-sm text-slate-400">Folio: ${sale.folio || 'N/A'}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-sm text-slate-400">${new Date(sale.timestamp).toLocaleString('es-MX')}</p>
+                                            <button class="view-ticket-btn text-sm text-blue-500 hover:underline" data-sale-key="${sale.key}">Ver Ticket</button>
+                                        </div>
+                                    </div>
+                                </li>`;
+                            }).join('');
+                    }
+
+                    // Update KPIs
+                    const kpisContainer = document.getElementById('tickets-kpis');
+                    const totalRevenue = filteredSales.reduce((sum, sale) => sum + sale.total, 0);
+                    const totalTransactions = filteredSales.length;
+                    const avgTransaction = totalTransactions > 0 ? totalRevenue / totalTransactions : 0;
+                    kpisContainer.innerHTML = `
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow"><p class="text-sm text-slate-500">Ingresos Totales</p><p class="text-2xl font-bold">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(totalRevenue)}</p></div>
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow"><p class="text-sm text-slate-500">Transacciones</p><p class="text-2xl font-bold">${totalTransactions}</p></div>
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow"><p class="text-sm text-slate-500">Ticket Promedio</p><p class="text-2xl font-bold">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(avgTransaction)}</p></div>
+                    `;
+                    
+                    document.querySelectorAll('.view-ticket-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const saleKey = e.target.dataset.saleKey;
+                            const sale = allSales.find(s => s.key === saleKey);
+                            if (sale) {
+                                // Re-generate ticket without finalizing a new sale
+                                generateTicketCanvas(sale);
+                                document.getElementById('close-ticket-btn').onclick = () => closeModal('ticket-modal');
+                                openModal('ticket-modal');
+                            }
+                        });
+                    });
+                };
+
+                const exportToCSV = () => {
+                    const startVal = document.getElementById('ticket-start-date').value;
+                    const endVal = document.getElementById('ticket-end-date').value;
+                    const startDate = startVal ? new Date(startVal + 'T00:00:00').getTime() : null;
+                    const endDate = endVal ? new Date(endVal + 'T23:59:59').getTime() : null;
+                    const sellerId = document.getElementById('ticket-seller').value;
+                       const filteredSales = allSales.filter(sale => {
+                        const saleDate = sale.timestamp;
+                        const isAfterStart = !startDate || saleDate >= startDate;
+                        const isBeforeEnd = !endDate || saleDate <= endDate;
+                        const isCorrectSeller = sellerId === 'all' || sale.sellerId === sellerId;
+                        return isAfterStart && isBeforeEnd && isCorrectSeller;
+                    });
+
+                    let csvContent = "data:text/csv;charset=utf-8,Folio,Fecha,Vendedor,Total,Items\n";
+                    filteredSales.forEach(sale => {
+                        const seller = allUsers[sale.sellerId];
+                        const sellerName = seller ? (seller.firstName || seller.email) : 'Desconocido';
+                        const itemsString = sale.items.map(i => `${i.quantity}x ${i.producto}`).join('; ');
+                        csvContent += `${sale.folio || ''},${new Date(sale.timestamp).toLocaleString('es-MX')},"${sellerName}",${sale.total},"${itemsString}"\n`;
+                    });
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", "reporte_tickets.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+
+                document.getElementById('ticket-start-date').addEventListener('change', updateFilteredTickets);
+                document.getElementById('ticket-end-date').addEventListener('change', updateFilteredTickets);
+                document.getElementById('ticket-seller').addEventListener('change', updateFilteredTickets);
+                document.getElementById('ticket-folio-search').addEventListener('input', updateFilteredTickets);
+                document.getElementById('export-tickets-csv').addEventListener('click', exportToCSV);
+                updateFilteredTickets();
             };
 
-            const renderLowStockList = (threshold = 10) => {
-                const lowStockProducts = allProducts.filter(p => !p.isPromo && p.stock < threshold).sort((a,b) => a.stock - b.stock);
-                if (lowStockProducts.length === 0) return `<p class="text-slate-500">No hay productos con bajo stock (menos de ${threshold} unidades).</p>`;
-                return `<div class="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden"><table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700"><thead class="bg-slate-50 dark:bg-slate-700"><tr><th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Producto</th><th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Stock Restante</th></tr></thead><tbody class="divide-y divide-slate-200 dark:divide-slate-700">${lowStockProducts.map(p => `<tr><td class="px-6 py-4 whitespace-nowrap"><div class="text-sm font-medium text-slate-900 dark:text-white">${p.producto}</div><div class="text-sm text-slate-500 dark:text-slate-400">${p.codigo}</div></td><td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-yellow-500">${p.stock}</td></tr>`).join('')}</tbody></table></div>`;
+            const renderLowStockList = () => {
+                const container = document.getElementById('admin-dynamic-content');
+                container.innerHTML = `
+                    <div class="flex justify-end mb-4">
+                        <div>
+                            <label for="stock-threshold" class="text-sm font-medium">Umbral de Stock:</label>
+                            <input type="number" id="stock-threshold" value="10" min="1" class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600 w-24">
+                        </div>
+                    </div>
+                    <div id="low-stock-table-container" class="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden"></div>
+                `;
+
+                const updateLowStockTable = () => {
+                    const threshold = parseInt(document.getElementById('stock-threshold').value) || 10;
+                    const lowStockProducts = allProducts.filter(p => (p.stock || 0) < threshold && !p.isPromo);
+                    const tableContainer = document.getElementById('low-stock-table-container');
+
+                    if (lowStockProducts.length === 0) {
+                        tableContainer.innerHTML = '<p class="p-4 text-center text-slate-500">No hay productos con bajo stock.</p>';
+                        return;
+                    }
+
+                    tableContainer.innerHTML = `
+                        <table class="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+                            <thead class="bg-slate-50 dark:bg-slate-700">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Producto</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-300 uppercase tracking-wider">Stock Actual</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                                ${lowStockProducts.sort((a, b) => a.stock - b.stock).map(p => `
+                                    <tr>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="flex items-center">
+                                                <div class="flex-shrink-0 h-10 w-10"><img class="h-10 w-10 rounded-full object-cover" src="${p.imagen_url}" alt=""></div>
+                                                <div class="ml-4">
+                                                    <div class="text-sm font-medium text-slate-900 dark:text-white">${p.producto}</div>
+                                                    <div class="text-sm text-slate-500 dark:text-slate-400">${p.codigo}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium text-red-500">${p.stock} unidades</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                };
+
+                document.getElementById('stock-threshold').addEventListener('input', updateLowStockTable);
+                updateLowStockTable();
             };
-            
+           
             const renderEmployeeList = () => {
-                const employees = Object.entries(allUsers).filter(([uid, user]) => user.role === 'employee');
-                let content = `<div class="flex justify-end mb-4"><button id="add-employee-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Agregar Empleado</button></div>`;
+                const container = document.getElementById('admin-dynamic-content');
+                const employees = Object.entries(allUsers).filter(([_, user]) => user.role === 'employee' || user.role === 'admin');
+               
+                let content = `<div class="flex justify-end mb-4"><button id="add-employee-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Agregar Empleado/Admin</button></div>`;
                 if (employees.length === 0) {
                     content += '<p class="text-slate-500">No hay empleados registrados.</p>';
                 } else {
-                    content += `<div class="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden"><ul class="divide-y divide-slate-200 dark:divide-slate-700">${employees.map(([uid, user]) => `
+                    content += `<div class="bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-hidden"><ul class="divide-y divide-slate-200 dark:divide-slate-700">${employees.map(([uid, user]) => {
+                        const name = (user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : user.email;
+                        const roleBadge = user.role === 'admin' 
+                            ? `<span class="text-xs font-medium px-2 py-1 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300">Admin</span>`
+                            : `<span class="text-xs font-medium px-2 py-1 rounded-full bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300">Empleado</span>`;
+
+                        return `
                         <li class="p-4 flex flex-wrap justify-between items-center gap-4">
                             <div>
-                                <p class="font-semibold">${user.email}</p>
+                                <p class="font-semibold flex items-center gap-2">${name} ${roleBadge}</p>
+                                <p class="text-sm text-slate-500">${user.email}</p>
                                 <p class="text-sm text-slate-500">Salario Base: ${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(user.baseSalary || 0)}</p>
                             </div>
-                            <div class="flex gap-2">
+                            <div class="flex gap-2 flex-wrap">
                                 <button class="edit-employee-btn text-sm text-blue-500 hover:underline" data-uid="${uid}">Editar</button>
                                 <button class="view-performance-btn text-sm text-purple-500 hover:underline" data-uid="${uid}">Desempeño</button>
+                                <button class="delete-employee-btn text-sm text-red-500 hover:underline" data-uid="${uid}">Eliminar</button>
                             </div>
-                        </li>`).join('')}</ul></div>`;
+                        </li>`
+                    }).join('')}</ul></div>`;
                 }
-                
-                setTimeout(() => {
-                    document.getElementById('add-employee-btn')?.addEventListener('click', () => openEmployeeModal('add'));
-                    document.querySelectorAll('.edit-employee-btn').forEach(btn => btn.addEventListener('click', (e) => openEmployeeModal('edit', e.target.dataset.uid)));
-                    document.querySelectorAll('.view-performance-btn').forEach(btn => btn.addEventListener('click', (e) => showView('desempeno-vendedor-view', {uid: e.target.dataset.uid})));
-                }, 0);
+               
+                container.innerHTML = content;
 
-                return content;
+                document.getElementById('add-employee-btn')?.addEventListener('click', () => openEmployeeModal('add'));
+                document.querySelectorAll('.edit-employee-btn').forEach(btn => btn.addEventListener('click', (e) => openEmployeeModal('edit', e.target.dataset.uid)));
+                document.querySelectorAll('.view-performance-btn').forEach(btn => btn.addEventListener('click', (e) => showView('desempeno-vendedor-view', {uid: e.target.dataset.uid})));
+                document.querySelectorAll('.delete-employee-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const uid = e.target.dataset.uid;
+                        const user = allUsers[uid];
+                        showConfirmation('Eliminar Empleado', `¿Estás seguro de que quieres eliminar a ${user.email}? Esta acción no se puede deshacer.`, async () => {
+                            try {
+                                // This only deletes from the Realtime Database. Deleting from Auth requires a backend.
+                                await remove(ref(db, `users/${uid}`));
+                                logAction('user_delete', { deletedUserId: uid, deletedUserEmail: user.email });
+                                showToast('Empleado eliminado de la base de datos.');
+                                renderEmployeeList(); // Refresh view
+                            } catch (error) {
+                                showToast(`Error al eliminar empleado: ${error.message}`, true)
+                            }
+                        });
+                    });
+                });
             };
 
             const openEmployeeModal = (mode, uid = null) => {
@@ -769,168 +989,136 @@
                 document.getElementById('employee-id').value = '';
                 const passwordInput = document.getElementById('employee-password');
                 const modalTitle = document.getElementById('employee-modal-title');
+                const emailInput = document.getElementById('employee-email');
+                const roleSelect = document.getElementById('employee-role');
 
                 if (mode === 'edit') {
                     const user = allUsers[uid];
                     modalTitle.textContent = 'Editar Empleado';
                     document.getElementById('employee-id').value = uid;
-                    document.getElementById('employee-email').value = user.email;
-                    document.getElementById('employee-email').disabled = true;
+                    document.getElementById('employee-first-name').value = user.firstName || '';
+                    document.getElementById('employee-last-name').value = user.lastName || '';
+                    emailInput.value = user.email;
+                    emailInput.disabled = true;
                     document.getElementById('employee-base-salary').value = user.baseSalary || 0;
+                    roleSelect.value = user.role || 'employee';
                     passwordInput.placeholder = "Dejar en blanco para no cambiar";
                     passwordInput.required = false;
                 } else {
                     modalTitle.textContent = 'Agregar Empleado';
-                    document.getElementById('employee-email').disabled = false;
+                    emailInput.disabled = false;
+                    roleSelect.value = 'employee';
                     passwordInput.placeholder = "Contraseña Temporal";
                     passwordInput.required = true;
                 }
                 openModal('employee-modal');
             };
 
-            const renderPayrollReport = () => {
-                const today = new Date();
-                const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-                const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
-
-                const content = `
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md mb-6">
-                        <div class="flex flex-wrap gap-4 items-center justify-between">
-                            <div class="flex gap-4">
-                                <div>
-                                    <label for="payroll-start-date" class="text-sm font-medium">Desde:</label>
-                                    <input type="date" id="payroll-start-date" value="${firstDayOfMonth}" class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600">
-                                </div>
-                                <div>
-                                    <label for="payroll-end-date" class="text-sm font-medium">Hasta:</label>
-                                    <input type="date" id="payroll-end-date" value="${lastDayOfMonth}" class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600">
-                                </div>
-                            </div>
-                            <button id="export-payroll-csv" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                Exportar CSV
-                            </button>
-                        </div>
-                    </div>
-                    <div id="payroll-kpis" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
-                    <div id="payroll-table-container" class="overflow-x-auto bg-white dark:bg-slate-800 rounded-lg shadow-md"></div>
-                    <div id="payroll-pending" class="mt-6 bg-white dark:bg-slate-800 p-4 rounded-lg shadow"></div>
-                    <div class="mt-6 bg-white dark:bg-slate-800 p-4 rounded-lg shadow">
-                        <h3 class="text-xl font-bold mb-2">Tendencia de Nómina</h3>
-                        <canvas id="payroll-trend-chart"></canvas>
-                    </div>
-                `;
-                
-                showView('payroll-view');
-                payrollView.innerHTML = `
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-2xl font-bold">Reporte de Nómina</h2>
-                        <button id="back-to-admin-dashboard" class="flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-500 font-semibold"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>Volver</button>
-                    </div>
-                    ${content}
-                `;
-                
-                const updateReport = () => {
-                    const startDate = new Date(document.getElementById('payroll-start-date').value + 'T00:00:00');
-                    const endDate = new Date(document.getElementById('payroll-end-date').value + 'T23:59:59');
-                    generatePayrollTable(startDate, endDate);
-                    renderPayrollKPIs(startDate, endDate);
-                    renderPayrollTrendChart(startDate, endDate);
-                    renderPendingPayments(startDate, endDate);
-                };
-
-                document.getElementById('back-to-admin-dashboard').addEventListener('click', () => {
-                    showView('perfil-view');
-                });
-                document.getElementById('payroll-start-date').addEventListener('change', updateReport);
-                document.getElementById('payroll-end-date').addEventListener('change', updateReport);
-                document.getElementById('export-payroll-csv').addEventListener('click', () => {
-                    const startDate = new Date(document.getElementById('payroll-start-date').value + 'T00:00:00');
-                    const endDate = new Date(document.getElementById('payroll-end-date').value + 'T23:59:59');
-                    exportPayrollToCSV(startDate, endDate);
-                });
-                updateReport();
-            };
-            
-            window.showSellerPerformance = (uid) => showView('desempeno-vendedor-view', {uid});
-
             // Event Listeners for Admin Modals
             document.getElementById('cancel-expense-btn').addEventListener('click', () => closeModal('expense-modal'));
-            document.getElementById('expense-form').addEventListener('submit', (e) => {
+            document.getElementById('expense-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const description = document.getElementById('expense-description').value;
                 const amount = parseFloat(document.getElementById('expense-amount').value);
                 const category = document.getElementById('expense-category').value;
                 if (description && amount > 0 && category) {
-                    push(ref(db, 'gastos'), { description, amount, category, timestamp: Date.now() });
-                    showToast('Gasto registrado con éxito.');
-                    closeModal('expense-modal');
-                    e.target.reset();
+                    try {
+                        await push(ref(db, 'gastos'), { description, amount, category, timestamp: Date.now() });
+                        logAction('expense_add', { amount, category, description });
+                        showToast('Gasto registrado con éxito.');
+                        closeModal('expense-modal');
+                        e.target.reset();
+                    } catch (error) {
+                        showToast(`Error: ${error.message}`, true);
+                    }
                 }
             });
 
             document.getElementById('cancel-income-btn').addEventListener('click', () => closeModal('income-modal'));
-            document.getElementById('income-form').addEventListener('submit', (e) => {
+            document.getElementById('income-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const description = document.getElementById('income-description').value;
                 const amount = parseFloat(document.getElementById('income-amount').value);
                 const category = document.getElementById('income-category').value;
                 if (description && amount > 0 && category) {
-                    push(ref(db, 'ingresos'), { description, amount, category, timestamp: Date.now() });
-                    showToast('Ingreso registrado con éxito.');
-                    closeModal('income-modal');
-                    e.target.reset();
+                    try {
+                        await push(ref(db, 'ingresos'), { description, amount, category, timestamp: Date.now() });
+                        logAction('income_add', { amount, category, description });
+                        showToast('Ingreso registrado con éxito.');
+                        closeModal('income-modal');
+                        e.target.reset();
+                    } catch (error) {
+                        showToast(`Error: ${error.message}`, true);
+                    }
                 }
             });
 
-            document.getElementById('transaction-form').addEventListener('submit', (e) => {
+            document.getElementById('transaction-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const type = document.getElementById('transaction-type').value;
                 const employeeId = document.getElementById('transaction-employee-id').value;
                 const description = document.getElementById('transaction-description').value;
                 const amount = parseFloat(document.getElementById('transaction-amount').value);
+                const category = document.getElementById('transaction-category').value;
 
-                if (description && amount > 0 && employeeId && type) {
+                if (description && amount > 0 && employeeId && type && category) {
                     const path = `transactions/${type}`;
-                    push(ref(db, path), { employeeId, description, amount, timestamp: Date.now() });
-                    showToast(`${type === 'bonuses' ? 'Bono' : 'Deducción'} registrado con éxito.`);
-                    closeModal('transaction-modal');
-                    e.target.reset();
+                    try {
+                        await push(ref(db, path), { employeeId, description, amount, category, timestamp: Date.now() });
+                        logAction(type === 'bonuses' ? 'bonus_add' : 'deduction_add', { employeeId, amount, description });
+                        showToast(`${type === 'bonuses' ? 'Bono' : 'Deducción'} registrado con éxito.`);
+                        closeModal('transaction-modal');
+                        e.target.reset();
+                        if (payrollView.classList.contains('active')) renderPayrollReport();
+                    } catch(error) {
+                        showToast(`Error: ${error.message}`, true);
+                    }
                 }
             });
-            document.querySelector('#transaction-modal .cancel-btn').addEventListener('click', () => closeModal('transaction-modal'));
-            
+            document.getElementById('cancel-transaction-btn').addEventListener('click', () => closeModal('transaction-modal'));
+           
             document.getElementById('cancel-employee-btn').addEventListener('click', () => closeModal('employee-modal'));
-            document.getElementById('employee-form').addEventListener('submit', (e) => {
+            document.getElementById('employee-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                const uid = document.getElementById('employee-id').value;
                 const email = document.getElementById('employee-email').value;
                 const password = document.getElementById('employee-password').value;
                 const baseSalary = parseFloat(document.getElementById('employee-base-salary').value);
-                const uid = document.getElementById('employee-id').value;
+                const firstName = document.getElementById('employee-first-name').value;
+                const lastName = document.getElementById('employee-last-name').value;
+                const role = document.getElementById('employee-role').value;
 
                 if (uid) { // Editing existing employee
-                    const updates = {
-                        email: email,
-                        baseSalary: baseSalary
-                    };
-                    update(ref(db, 'users/' + uid), updates).then(() => {
+                    const updates = { baseSalary, firstName, lastName, role };
+                    try {
+                        await update(ref(db, `users/${uid}`), updates);
+                        logAction('user_update', { updatedUserId: uid, updatedUserEmail: email });
                         showToast('Empleado actualizado.');
                         closeModal('employee-modal');
-                        renderAdminDashboard(); // Refresh view
-                    }).catch(err => showToast('Error al actualizar: ' + err.message, true));
+                        renderEmployeeList(); // Refresh view
+                    } catch (error) {
+                         showToast('Error al actualizar: ' + error.message, true)
+                    }
                 } else { // Creating new employee
                     showConfirmation(
                         'Confirmar Creación de Empleado',
-                        'Esta acción creará un nuevo usuario y podría requerir que inicies sesión de nuevo. ¿Deseas continuar?',
+                        `Esta acción creará un nuevo usuario con el correo ${email}. ¿Deseas continuar?`,
                         async () => {
                             try {
-                                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                                // This is a simplified example. A real app would use a secure backend endpoint to create users.
+                                const tempAuth = getAuth(initializeApp(firebaseConfig, `secondary-${Date.now()}`));
+                                const userCredential = await createUserWithEmailAndPassword(tempAuth, email, password);
                                 const user = userCredential.user;
+                                // Now save user details in Realtime Database
                                 await set(ref(db, 'users/' + user.uid), {
                                     email: user.email,
-                                    role: 'employee',
-                                    baseSalary: baseSalary
+                                    role: role,
+                                    baseSalary,
+                                    firstName,
+                                    lastName
                                 });
+                                await signOut(tempAuth); // Sign out the temporary auth instance
+                                logAction('user_create', { newUserId: user.uid, newUserEmail: email, role });
                                 showToast('Empleado creado con éxito.');
                                 closeModal('employee-modal');
                                 e.target.reset();
@@ -957,22 +1145,77 @@
                         amount,
                         timestamp: Date.now()
                     }).then(() => {
+                        logAction('payroll_payment', { employeeId, amount, description });
                         showToast('Pago registrado con éxito.');
                         closeModal('payment-modal');
                         e.target.reset();
                         if(document.getElementById('payroll-view').classList.contains('active')) {
                             renderPayrollReport();
                         }
-                    }).catch(err => showToast('Error al registrar pago.', true));
+                    }).catch(err => showToast(`Error al registrar pago: ${err.message}`, true));
                 }
             });
             document.getElementById('close-payment-history-btn')?.addEventListener('click', () => closeModal('payment-history-modal'));
 
             // Payroll and Performance Functions
+            function renderPayrollReport() {
+                payrollView.innerHTML = `
+                    <div class="space-y-6">
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md">
+                            <div class="flex flex-wrap gap-4 items-center">
+                                <div><label for="payroll-start-date" class="text-sm font-medium">Desde:</label><input type="date" id="payroll-start-date" class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"></div>
+                                <div><label for="payroll-end-date" class="text-sm font-medium">Hasta:</label><input type="date" id="payroll-end-date" class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"></div>
+                                <button id="export-payroll-csv" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Exportar CSV</button>
+                            </div>
+                        </div>
+                        <div id="payroll-kpis" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md">
+                            <h3 class="text-xl font-bold mb-4">Tabla de Nómina</h3>
+                            <div id="payroll-table-container" class="overflow-x-auto"></div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md">
+                                <h3 class="text-xl font-bold mb-4">Tendencia de Pagos</h3>
+                                <canvas id="payroll-trend-chart"></canvas>
+                            </div>
+                            <div id="payroll-pending" class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md"></div>
+                        </div>
+                    </div>
+                `;
+
+                const updatePayrollView = () => {
+                    const startVal = document.getElementById('payroll-start-date').value;
+                    const endVal = document.getElementById('payroll-end-date').value;
+                    const startDate = startVal ? new Date(startVal + 'T00:00:00') : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                    const endDate = endVal ? new Date(endVal + 'T23:59:59') : new Date();
+                   
+                    generatePayrollTable(startDate, endDate);
+                    renderPayrollKPIs(startDate, endDate);
+                    renderPayrollTrendChart(startDate, endDate);
+                    renderPendingPayments(startDate, endDate);
+                };
+               
+                const today = new Date();
+                document.getElementById('payroll-start-date').value = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                document.getElementById('payroll-end-date').value = today.toISOString().split('T')[0];
+
+                document.getElementById('payroll-start-date').addEventListener('change', updatePayrollView);
+                document.getElementById('payroll-end-date').addEventListener('change', updatePayrollView);
+                document.getElementById('export-payroll-csv').addEventListener('click', () => {
+                    const startVal = document.getElementById('payroll-start-date').value;
+                    const endVal = document.getElementById('payroll-end-date').value;
+                    const startDate = startVal ? new Date(startVal + 'T00:00:00') : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+                    const endDate = endVal ? new Date(endVal + 'T23:59:59') : new Date();
+                    exportPayrollToCSV(startDate, endDate)
+                });
+
+                updatePayrollView();
+            }
+
             function generatePayrollTable(startDate, endDate) {
                 const tableContainer = document.getElementById('payroll-table-container');
                 const employees = Object.entries(allUsers).filter(([_, user]) => user.role === 'employee');
-                
+               
                 if (employees.length === 0) {
                     tableContainer.innerHTML = '<p class="text-slate-500 p-4">No hay empleados registrados.</p>';
                     return;
@@ -995,27 +1238,28 @@
                 `;
 
                 employees.forEach(([uid, user]) => {
-                    const bonuses = allTransactions.bonuses
+                    const bonuses = (allTransactions.bonuses || [])
                         .filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime())
                         .reduce((sum, t) => sum + t.amount, 0);
-                    const deductions = allTransactions.deductions
+                    const deductions = (allTransactions.deductions || [])
                         .filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime())
                         .reduce((sum, t) => sum + t.amount, 0);
-                    const payments = allPayrollPayments
+                    const payments = (allPayrollPayments || [])
                         .filter(p => p.employeeId === uid && p.timestamp >= startDate.getTime() && p.timestamp <= endDate.getTime())
                         .reduce((sum, p) => sum + p.amount, 0);
                     const baseSalary = user.baseSalary || 0;
                     const netTotal = baseSalary + bonuses - deductions - payments;
+                    const name = (user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : user.email;
 
                     tableHTML += `
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">${user.email}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-white">${name}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-mono">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(baseSalary)}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-mono text-green-500">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(bonuses)}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-mono text-red-500">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(deductions)}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-mono">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(payments)}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-mono font-bold ${netTotal < 0 ? 'text-red-500' : 'text-blue-500'}">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(netTotal)}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right space-x-2">
                                 <button class="add-bonus-btn text-blue-500 hover:underline" data-uid="${uid}">Bono</button>
                                 <button class="add-deduction-btn text-red-500 hover:underline" data-uid="${uid}">Deducción</button>
                                 <button class="pay-salary-btn text-green-500 hover:underline" data-uid="${uid}" data-amount="${netTotal > 0 ? netTotal : 0}">Pagar</button>
@@ -1048,29 +1292,13 @@
                 const employees = Object.entries(allUsers).filter(([_, user]) => user.role === 'employee');
 
                 const totalBaseSalaries = employees.reduce((sum, [_, user]) => sum + (user.baseSalary || 0), 0);
-                const totalBonuses = allTransactions.bonuses
+                const totalBonuses = (allTransactions.bonuses || [])
                     .filter(t => t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime())
                     .reduce((sum, t) => sum + t.amount, 0);
-                const totalDeductions = allTransactions.deductions
+                const totalDeductions = (allTransactions.deductions || [])
                     .filter(t => t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime())
                     .reduce((sum, t) => sum + t.amount, 0);
-                const totalPayments = allPayrollPayments
-                    .filter(p => p.timestamp >= startDate.getTime() && p.timestamp <= endDate.getTime())
-                    .reduce((sum, p) => sum + p.amount, 0);
-                const pendingPayments = employees.reduce((sum, [uid, user]) => {
-                    const bonuses = allTransactions.bonuses
-                        .filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime())
-                        .reduce((sum, t) => sum + t.amount, 0);
-                    const deductions = allTransactions.deductions
-                        .filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime())
-                        .reduce((sum, t) => sum + t.amount, 0);
-                    const payments = allPayrollPayments
-                        .filter(p => p.employeeId === uid && p.timestamp >= startDate.getTime() && p.timestamp <= endDate.getTime())
-                        .reduce((sum, p) => sum + p.amount, 0);
-                    const netTotal = (user.baseSalary || 0) + bonuses - deductions - payments;
-                    return sum + (netTotal > 0 ? netTotal : 0);
-                }, 0);
-
+               
                 kpisContainer.innerHTML = `
                     <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow">
                         <p class="text-sm text-slate-500">Total Salarios Base</p>
@@ -1088,14 +1316,13 @@
             }
 
             function renderPayrollTrendChart(startDate, endDate) {
-                if (payrollChart) {
-                    payrollChart.destroy();
-                }
+                if (payrollChart) payrollChart.destroy();
+               
                 const ctx = document.getElementById('payroll-trend-chart')?.getContext('2d');
                 if (!ctx) return;
 
                 const paymentsByMonth = {};
-                allPayrollPayments
+                (allPayrollPayments || [])
                     .filter(p => p.timestamp >= startDate.getTime() && p.timestamp <= endDate.getTime())
                     .forEach(p => {
                         const date = new Date(p.timestamp);
@@ -1120,13 +1347,7 @@
                             tension: 0.1
                         }]
                     },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: { beginAtZero: true, title: { display: true, text: 'Monto (MXN)' } },
-                            x: { title: { display: true, text: 'Mes' } }
-                        }
-                    }
+                    options: { responsive: true, scales: { y: { beginAtZero: true, title: { display: true, text: 'Monto (MXN)' } }, x: { title: { display: true, text: 'Mes' } } } }
                 });
             }
 
@@ -1136,35 +1357,25 @@
                 let pendingHTML = '<h3 class="text-xl font-bold mb-2">Pagos Pendientes</h3>';
 
                 const pendingPayments = employees.map(([uid, user]) => {
-                    const bonuses = allTransactions.bonuses
-                        .filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime())
-                        .reduce((sum, t) => sum + t.amount, 0);
-                    const deductions = allTransactions.deductions
-                        .filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime())
-                        .reduce((sum, t) => sum + t.amount, 0);
-                    const payments = allPayrollPayments
-                        .filter(p => p.employeeId === uid && p.timestamp >= startDate.getTime() && p.timestamp <= endDate.getTime())
-                        .reduce((sum, p) => sum + p.amount, 0);
+                    const bonuses = (allTransactions.bonuses || []).filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime()).reduce((sum, t) => sum + t.amount, 0);
+                    const deductions = (allTransactions.deductions || []).filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime()).reduce((sum, t) => sum + t.amount, 0);
+                    const payments = (allPayrollPayments || []).filter(p => p.employeeId === uid && p.timestamp >= startDate.getTime() && p.timestamp <= endDate.getTime()).reduce((sum, p) => sum + p.amount, 0);
                     const netTotal = (user.baseSalary || 0) + bonuses - deductions - payments;
-                    return { email: user.email, pending: netTotal, uid };
+                    const name = (user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : user.email;
+                    return { name, pending: netTotal, uid };
                 }).filter(p => p.pending > 0);
 
                 if (pendingPayments.length === 0) {
                     pendingHTML += '<p class="text-slate-500">No hay pagos pendientes.</p>';
                 } else {
-                    pendingHTML += `
-                        <ul class="divide-y divide-slate-200 dark:divide-slate-700">
-                            ${pendingPayments.map(p => `
-                                <li class="py-2 flex justify-between items-center">
-                                    <span>${p.email}</span>
-                                    <div class="flex gap-2 items-center">
-                                        <span class="font-mono text-yellow-500">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(p.pending)}</span>
-                                        <button class="pay-salary-btn text-green-500 hover:underline" data-uid="${p.uid}" data-amount="${p.pending}">Pagar</button>
-                                    </div>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    `;
+                    pendingHTML += `<ul class="divide-y divide-slate-200 dark:divide-slate-700">${pendingPayments.map(p => `
+                        <li class="py-2 flex justify-between items-center">
+                            <span>${p.name}</span>
+                            <div class="flex gap-2 items-center">
+                                <span class="font-mono text-yellow-500">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(p.pending)}</span>
+                                <button class="pay-salary-btn text-green-500 hover:underline" data-uid="${p.uid}" data-amount="${p.pending}">Pagar</button>
+                            </div>
+                        </li>`).join('')}</ul>`;
                 }
 
                 pendingContainer.innerHTML = pendingHTML;
@@ -1176,22 +1387,16 @@
 
             function exportPayrollToCSV(startDate, endDate) {
                 const employees = Object.entries(allUsers).filter(([_, user]) => user.role === 'employee');
-                let csv = 'Correo,Salario Base,Bonos,Deducciones,Pagos,Total Neto\n';
+                let csv = 'Correo,Nombre,Salario Base,Bonos,Deducciones,Pagos,Total Neto\n';
 
                 employees.forEach(([uid, user]) => {
-                    const bonuses = allTransactions.bonuses
-                        .filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime())
-                        .reduce((sum, t) => sum + t.amount, 0);
-                    const deductions = allTransactions.deductions
-                        .filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime())
-                        .reduce((sum, t) => sum + t.amount, 0);
-                    const payments = allPayrollPayments
-                        .filter(p => p.employeeId === uid && p.timestamp >= startDate.getTime() && p.timestamp <= endDate.getTime())
-                        .reduce((sum, p) => sum + p.amount, 0);
+                    const bonuses = (allTransactions.bonuses || []).filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime()).reduce((sum, t) => sum + t.amount, 0);
+                    const deductions = (allTransactions.deductions || []).filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime()).reduce((sum, t) => sum + t.amount, 0);
+                    const payments = (allPayrollPayments || []).filter(p => p.employeeId === uid && p.timestamp >= startDate.getTime() && p.timestamp <= endDate.getTime()).reduce((sum, p) => sum + p.amount, 0);
                     const baseSalary = user.baseSalary || 0;
                     const netTotal = baseSalary + bonuses - deductions - payments;
-
-                    csv += `"${user.email}",${baseSalary},${bonuses},${deductions},${payments},${netTotal}\n`;
+                    const name = (user.firstName && user.lastName) ? `${user.firstName} ${user.lastName}` : '';
+                    csv += `"${user.email}","${name}",${baseSalary},${bonuses},${deductions},${payments},${netTotal}\n`;
                 });
 
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1216,7 +1421,7 @@
                 document.getElementById('payment-employee-id').value = employeeId;
                 document.getElementById('payment-form').reset();
                 document.getElementById('payment-amount').value = amount;
-                document.getElementById('payment-description').value = `Pago de Nómina - ${new Date().toLocaleString('es-MX')}`;
+                document.getElementById('payment-description').value = `Pago de Nómina - ${new Date().toLocaleString('es-MX', { month: 'long', year: 'numeric' })}`;
                 openModal('payment-modal');
             }
 
@@ -1224,57 +1429,85 @@
                 const modalTitle = document.getElementById('payment-history-title');
                 const contentContainer = document.getElementById('payment-history-content');
                 const employee = allUsers[employeeId];
-                modalTitle.textContent = `Historial de Pagos: ${employee.email}`;
-                
-                const payments = allPayrollPayments
+                const name = (employee.firstName && employee.lastName) ? `${employee.firstName} ${employee.lastName}` : employee.email;
+                modalTitle.textContent = `Historial de Pagos: ${name}`;
+               
+                const payments = (allPayrollPayments || [])
                     .filter(p => p.employeeId === employeeId)
                     .sort((a, b) => b.timestamp - a.timestamp);
-                
+               
                 if (payments.length === 0) {
                     contentContainer.innerHTML = '<p class="text-slate-500 p-4">No hay pagos registrados.</p>';
                 } else {
-                    contentContainer.innerHTML = `
-                        <ul class="divide-y divide-slate-200 dark:divide-slate-700">
-                            ${payments.map(p => `
-                                <li class="py-2 flex justify-between items-center">
-                                    <div>
-                                        <p class="font-semibold">${p.description}</p>
-                                        <p class="text-sm text-slate-500">${new Date(p.timestamp).toLocaleString('es-MX')}</p>
-                                    </div>
-                                    <span class="font-mono text-green-500">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(p.amount)}</span>
-                                </li>
-                            `).join('')}
-                        </ul>
-                    `;
+                    contentContainer.innerHTML = `<ul class="divide-y divide-slate-200 dark:divide-slate-700">${payments.map(p => `
+                        <li class="py-2 flex justify-between items-center">
+                            <div>
+                                <p class="font-semibold">${p.description}</p>
+                                <p class="text-sm text-slate-500">${new Date(p.timestamp).toLocaleString('es-MX')}</p>
+                            </div>
+                            <span class="font-mono text-green-500">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(p.amount)}</span>
+                        </li>`).join('')}</ul>`;
                 }
                 openModal('payment-history-modal');
             }
 
             function renderEmployeeDashboard(user) {
-                const mySales = allSales.filter(sale => sale.sellerId === user.uid);
-                const totalVendido = mySales.reduce((acc, sale) => acc + sale.total, 0);
-                const totalGanancia = mySales.reduce((acc, sale) => {
-                    const gananciaVenta = sale.items.reduce((itemAcc, item) => {
-                        return itemAcc + ((item.precio_venta - item.precio_compra) * item.quantity);
-                    }, 0);
-                    return acc + gananciaVenta;
-                }, 0);
-
-                let productosVendidosHTML = mySales.flatMap(sale => sale.items).map(item => `
-                    <li class="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-700">
-                        <span>${item.quantity} x ${item.producto}</span>
-                        <span class="font-mono">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(item.precio_venta * item.quantity)}</span>
-                    </li>
-                `).join('');
+                const userData = allUsers[user.uid];
+                const name = (userData && userData.firstName) ? `${userData.firstName} ${userData.lastName}` : user.email;
 
                 perfilView.innerHTML = `
-                    <h2 class="text-2xl font-bold mb-4">Tu Desempeño</h2>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="space-y-6">
+                        <div class="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-md text-center">
+                             <h2 class="text-3xl font-bold text-slate-800 dark:text-white">${name}</h2>
+                             <p class="text-slate-500 dark:text-slate-400">${user.email}</p>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold mb-4">Tu Desempeño de Ventas</h3>
+                             <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md mb-6">
+                                <div class="flex flex-wrap gap-4 items-center">
+                                    <div><label for="emp-start-date" class="text-sm font-medium">Desde:</label><input type="date" id="emp-start-date" class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"></div>
+                                    <div><label for="emp-end-date" class="text-sm font-medium">Hasta:</label><input type="date" id="emp-end-date" class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"></div>
+                                </div>
+                            </div>
+                            <div id="employee-kpis" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"></div>
+                            <div><h3 class="text-xl font-bold mb-2">Productos Vendidos</h3><ul id="employee-sold-products" class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow"></ul></div>
+                        </div>
+                    </div>
+                `;
+                
+                const updateEmployeeView = () => {
+                    const startVal = document.getElementById('emp-start-date').value;
+                    const endVal = document.getElementById('emp-end-date').value;
+                    const startDate = startVal ? new Date(startVal + 'T00:00:00').getTime() : 0;
+                    const endDate = endVal ? new Date(endVal + 'T23:59:59').getTime() : Date.now();
+
+                    const mySales = allSales.filter(sale => sale.sellerId === user.uid && sale.timestamp >= startDate && sale.timestamp <= endDate);
+                    const totalVendido = mySales.reduce((acc, sale) => acc + sale.total, 0);
+                    const totalGanancia = mySales.reduce((acc, sale) => {
+                        const gananciaVenta = sale.items.reduce((itemAcc, item) => {
+                            return itemAcc + ((item.precio_venta - item.precio_compra) * item.quantity);
+                        }, 0);
+                        return acc + gananciaVenta;
+                    }, 0);
+
+                    document.getElementById('employee-kpis').innerHTML = `
                         <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow"><p class="text-sm text-slate-500">Ventas Totales</p><p class="text-2xl font-bold">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(totalVendido)}</p></div>
                         <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow"><p class="text-sm text-slate-500">Ganancia Total</p><p class="text-2xl font-bold text-green-500">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(totalGanancia)}</p></div>
-                    </div>
-                    <div><h3 class="text-xl font-bold mb-2">Productos Vendidos</h3><ul class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow">${productosVendidosHTML || '<p class="text-slate-500">Aún no has vendido productos.</p>'}</ul></div>
-                `;
+                    `;
+
+                    let productosVendidosHTML = mySales.flatMap(sale => sale.items).map(item => `
+                        <li class="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-700">
+                            <span>${item.quantity} x ${item.producto}</span>
+                            <span class="font-mono">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(item.precio_venta * item.quantity)}</span>
+                        </li>
+                    `).join('');
+                    
+                    document.getElementById('employee-sold-products').innerHTML = productosVendidosHTML || '<p class="text-slate-500">Aún no has vendido productos en este periodo.</p>';
+                };
+
+                document.getElementById('emp-start-date').addEventListener('change', updateEmployeeView);
+                document.getElementById('emp-end-date').addEventListener('change', updateEmployeeView);
+                updateEmployeeView();
             }
 
             function renderSellerPerformanceView(uid) {
@@ -1287,6 +1520,7 @@
                 const today = new Date();
                 const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
                 const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+                const name = (seller.firstName && seller.lastName) ? `${seller.firstName} ${seller.lastName}` : seller.email;
 
                 desempenoVendedorView.innerHTML = `
                     <div class="mb-6 flex justify-between items-center">
@@ -1295,7 +1529,7 @@
                             Volver al Panel
                         </button>
                     </div>
-                    <h2 class="text-2xl font-bold mb-4">Desempeño de: <span class="text-blue-500">${seller.email}</span></h2>
+                    <h2 class="text-2xl font-bold mb-4">Desempeño de: <span class="text-blue-500">${name}</span></h2>
                     <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md mb-6">
                         <div class="flex flex-wrap gap-4 items-center">
                             <div><label for="perf-start-date" class="text-sm font-medium">Desde:</label><input type="date" id="perf-start-date" value="${firstDayOfMonth}" class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"></div>
@@ -1308,7 +1542,7 @@
                 const updatePerformanceView = () => {
                     const startDate = new Date(document.getElementById('perf-start-date').value + 'T00:00:00');
                     const endDate = new Date(document.getElementById('perf-end-date').value + 'T23:59:59');
-                    
+                   
                     const sellerSales = allSales.filter(sale => sale.sellerId === uid && sale.timestamp >= startDate.getTime() && sale.timestamp <= endDate.getTime());
                     const totalVendido = sellerSales.reduce((acc, sale) => acc + sale.total, 0);
                     const totalGanancia = sellerSales.reduce((acc, sale) => acc + sale.items.reduce((itemAcc, item) => itemAcc + ((item.precio_venta - item.precio_compra) * item.quantity), 0), 0);
@@ -1316,8 +1550,8 @@
                     const promoSalesCount = sellerSales.filter(sale => sale.items.some(item => item.isPromo)).length;
                     const promoRate = transactionCount > 0 ? (promoSalesCount / transactionCount) * 100 : 0;
 
-                    const bonuses = allTransactions.bonuses.filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime());
-                    const deductions = allTransactions.deductions.filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime());
+                    const bonuses = (allTransactions.bonuses || []).filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime());
+                    const deductions = (allTransactions.deductions || []).filter(t => t.employeeId === uid && t.timestamp >= startDate.getTime() && t.timestamp <= endDate.getTime());
 
                     const productSales = {};
                     sellerSales.forEach(sale => {
@@ -1328,7 +1562,7 @@
                         });
                     });
                     const topProducts = Object.entries(productSales).map(([producto, data]) => ({ producto, ...data })).sort((a, b) => b.quantity - a.quantity).slice(0, 5);
-                    
+                   
                     document.getElementById('performance-content').innerHTML = `
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                             <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow"><p class="text-sm text-slate-500">Ventas Totales</p><p class="text-2xl font-bold">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(totalVendido)}</p></div>
@@ -1355,9 +1589,7 @@
                         </div>
                     `;
 
-                    if (salesChart) {
-                        salesChart.destroy();
-                    }
+                    if (salesChart) salesChart.destroy();
                     const ctx = document.getElementById('sales-trend-chart')?.getContext('2d');
                     if (ctx) {
                         const salesByDate = sellerSales.sort((a, b) => a.timestamp - b.timestamp);
@@ -1378,11 +1610,171 @@
                         });
                     }
                 }
-                
+               
                 document.getElementById('back-to-admin-panel').addEventListener('click', () => showView('perfil-view'));
                 document.getElementById('perf-start-date').addEventListener('change', updatePerformanceView);
                 document.getElementById('perf-end-date').addEventListener('change', updatePerformanceView);
                 updatePerformanceView();
+            }
+
+            function renderFinancialReports() {
+                financialReportsView.innerHTML = `
+                    <div class="space-y-6">
+                         <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md">
+                            <div class="flex flex-wrap gap-4 items-center">
+                                <div><label for="fin-start-date" class="text-sm font-medium">Desde:</label><input type="date" id="fin-start-date" class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"></div>
+                                <div><label for="fin-end-date" class="text-sm font-medium">Hasta:</label><input type="date" id="fin-end-date" class="p-2 border rounded-md dark:bg-slate-700 dark:border-slate-600"></div>
+                            </div>
+                        </div>
+                        <div id="financial-kpis" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md">
+                                <h3 class="text-xl font-bold mb-4">Ingresos vs. Gastos</h3>
+                                <canvas id="income-expense-chart"></canvas>
+                            </div>
+                             <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md">
+                                <h3 class="text-xl font-bold mb-4">Ventas por Categoría</h3>
+                                <canvas id="category-sales-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const updateFinancialView = () => {
+                    const startVal = document.getElementById('fin-start-date').value;
+                    const endVal = document.getElementById('fin-end-date').value;
+                    const startDate = startVal ? new Date(startVal + 'T00:00:00') : new Date(new Date().getFullYear(), 0, 1);
+                    const endDate = endVal ? new Date(endVal + 'T23:59:59') : new Date();
+
+                    const filteredSales = allSales.filter(s => s.timestamp >= startDate.getTime() && s.timestamp <= endDate.getTime());
+                    const filteredExpenses = allGeneralExpenses.filter(e => e.timestamp >= startDate.getTime() && e.timestamp <= endDate.getTime());
+                    const filteredIncome = allGeneralIncome.filter(i => i.timestamp >= startDate.getTime() && i.timestamp <= endDate.getTime());
+                    const filteredPayroll = allPayrollPayments.filter(p => p.timestamp >= startDate.getTime() && p.timestamp <= endDate.getTime());
+
+                    // KPIs
+                    const totalRevenue = filteredSales.reduce((sum, s) => sum + s.total, 0) + filteredIncome.reduce((sum, i) => sum + i.amount, 0);
+                    const totalCostOfGoods = filteredSales.flatMap(s => s.items).reduce((sum, i) => sum + (i.precio_compra * i.quantity), 0);
+                    const grossProfit = filteredSales.reduce((sum, s) => sum + s.total, 0) - totalCostOfGoods;
+                    const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0) + filteredPayroll.reduce((sum, p) => sum + p.amount, 0);
+                    const netProfit = grossProfit - totalExpenses;
+
+                    document.getElementById('financial-kpis').innerHTML = `
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow"><p class="text-sm text-slate-500">Ingresos Totales</p><p class="text-2xl font-bold text-green-500">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(totalRevenue)}</p></div>
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow"><p class="text-sm text-slate-500">Gastos Totales</p><p class="text-2xl font-bold text-red-500">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(totalExpenses + totalCostOfGoods)}</p></div>
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow"><p class="text-sm text-slate-500">Ganancia Bruta</p><p class="text-2xl font-bold">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(grossProfit)}</p></div>
+                        <div class="bg-white dark:bg-slate-800 p-4 rounded-lg shadow"><p class="text-sm text-slate-500">Ganancia Neta</p><p class="text-2xl font-bold ${netProfit >= 0 ? 'text-blue-500' : 'text-orange-500'}">${new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(netProfit)}</p></div>
+                    `;
+
+                    // Income vs Expense Chart
+                    if(incomeExpenseChart) incomeExpenseChart.destroy();
+                    const incomeCtx = document.getElementById('income-expense-chart').getContext('2d');
+                    incomeExpenseChart = new Chart(incomeCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Finanzas'],
+                            datasets: [
+                                { label: 'Ingresos', data: [totalRevenue], backgroundColor: 'rgba(75, 192, 192, 0.6)' },
+                                { label: 'Gastos', data: [totalExpenses + totalCostOfGoods], backgroundColor: 'rgba(255, 99, 132, 0.6)' }
+                            ]
+                        }
+                    });
+
+                    // Sales by Category Chart
+                    const salesByCategory = {};
+                    filteredSales.forEach(sale => {
+                        sale.items.forEach(item => {
+                            const product = allProducts.find(p => p.producto === item.producto);
+                            const category = product?.categoria || 'Sin Categoría';
+                            if(!salesByCategory[category]) salesByCategory[category] = 0;
+                            salesByCategory[category] += item.precio_venta * item.quantity;
+                        });
+                    });
+                    if(categorySalesChart) categorySalesChart.destroy();
+                    const categoryCtx = document.getElementById('category-sales-chart').getContext('2d');
+                    categorySalesChart = new Chart(categoryCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: Object.keys(salesByCategory),
+                            datasets: [{
+                                data: Object.values(salesByCategory),
+                                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
+                            }]
+                        }
+                    });
+                };
+               
+                const today = new Date();
+                document.getElementById('fin-start-date').value = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+                document.getElementById('fin-end-date').value = today.toISOString().split('T')[0];
+                document.getElementById('fin-start-date').addEventListener('change', updateFinancialView);
+                document.getElementById('fin-end-date').addEventListener('change', updateFinancialView);
+                updateFinancialView();
+            }
+
+            // --- Gemini API Integration ---
+            const generateDescriptionBtn = document.getElementById('generate-description-btn');
+            const geminiLoader = document.getElementById('gemini-loader-container');
+
+            generateDescriptionBtn.addEventListener('click', async () => {
+                const productName = document.getElementById('producto').value;
+                const category = document.getElementById('categoria').value;
+                const descriptionTextarea = document.getElementById('descripcion');
+
+                if (!productName || !category) {
+                    showToast('Por favor, ingresa el nombre y la categoría del producto.', true);
+                    return;
+                }
+
+                geminiLoader.classList.remove('hidden');
+                geminiLoader.classList.add('flex');
+                generateDescriptionBtn.disabled = true;
+
+                const prompt = `Crea una descripción de producto atractiva y concisa para: "${productName}" en la categoría de "${category}". La descripción debe ser en español, ideal para un punto de venta, y no debe exceder los 250 caracteres.`;
+                
+                try {
+                    let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                    const payload = { contents: chatHistory };
+                    const apiKey = ""; // API key will be injected by the environment
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates[0] && result.candidates[0].content.parts[0].text) {
+                        descriptionTextarea.value = result.candidates[0].content.parts[0].text.trim();
+                    } else {
+                        throw new Error('Respuesta inesperada de la API.');
+                    }
+                } catch (error) {
+                    console.error("Error with Gemini API:", error);
+                    showToast('No se pudo generar la descripción. Inténtalo de nuevo.', true);
+                } finally {
+                    geminiLoader.classList.add('hidden');
+                    geminiLoader.classList.remove('flex');
+                    generateDescriptionBtn.disabled = false;
+                }
+            });
+
+            // --- Audit Log ---
+            function logAction(action, details = {}) {
+                const logEntry = {
+                    action,
+                    userId: auth.currentUser ? auth.currentUser.uid : 'system',
+                    userEmail: auth.currentUser ? auth.currentUser.email : 'system',
+                    timestamp: Date.now(),
+                    details
+                };
+                const logRef = push(ref(db, 'logs'));
+                set(logRef, logEntry).catch(error => console.error("Failed to write log:", error));
             }
 
             setupTheme();
